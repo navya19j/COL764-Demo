@@ -19,7 +19,6 @@ def ConvTSV(mat):
             o.write("\n")
     
 
-
 # Use http://projector.tensorflow.org/ for visualization of tsv matrices
 
 def add_value_labels(ax, spacing=5):
@@ -111,7 +110,7 @@ def plot_MAP_AP(yvals,titlee):
 
 def plot():
 
-    bm25ap = [0.3440145458986036, 0.3310199385712331, 0.31785408974893337, 0.2690420700911771, 0.26265440022118725, 0.24230070776584556, 0.2325012840070273, 0.20026029666783743, 0.18632996490307988, 0.15566280194523863, 0.14789720998055197, 0.14003711909512323, 0.1320983667005804, 0.11499309038210319, 0.11323153959689246][0:10]
+    bm25ap = [1.0, 0.9922339747077988, 0.9728850643352351, 0.972813124987038, 0.9602151284011914, 0.959474742073601, 0.9502429545546431, 0.87208370678018, 0.8674521354933725, 0.8484138181285013, 0.8149457476718406, 0.7960548166430519, 0.7949152775221854, 0.75, 0.6969696969696969][0:10]
     bm25zif = [1.0, 1.0, 1.0, 1.0, 0.9602951503222242, 0.8611111111111112, 0.848421322171848, 0.8301254723398109, 0.7877252965567625, 0.6896144420360651, 0.6742578396649442, 0.6610578852467778, 0.43724982746721874, 0.4286331604642242, 0.3669716146234724][0:10]
 
     kmeansapdocvec = sorted([0.04, 0.07893410359073144, 0.015151515151515152, 0.011904761904761904, 0.07226087624070925, 0.010446437370651424, 0.31415850064978523, 0.007692307692307693, 0.1404235171067261, 0.022823197651572938, 0.022066942719116633, 0.12049696626902509, 0.06666666666666667, 0.010169654906497011, 0.036713106295149636, 0.28562062238250085, 0.006493506493506494, 0.21823752055279147, 0.041666666666666664, 0.0136986301369863],reverse=True)[0:10]
@@ -150,27 +149,86 @@ def plot():
     # To load the display window
     plt.show()
 
+def plot_dbscan():
+
+    e_bert_ap = [0.05,0.08,0.11,0.14,0.17,0.2,0.3,0.6499,1]
+    maps_bert_ap = [0.24485469848887206,0.3524825763628553,0.27163884091965146,0.16518436231514108,0.16526770343597538,0.05179500598464827,0.002707317138397683,0.02520799190223034,0.025207991902230345]
+    clusters_bert_ap = [230,425,226,54,20,4,2,1,1]
+
+    e_bert_ziff = [0.05,0.08,0.11,0.14,0.17,0.2,0.3,0.6499,1]
+    maps_bert_ziff = [0.03849494795198383,0.09849494795198384,0.11849494795198384,0.13127272572976162,0.09158798146168401,0.06550399261298083,0.012064922347581681,0.011895094781160123,0.011895094781160123]
+    clusters_bert_ziff = [13,34,74,92,39,13,2,1,1]
+
+    e_doc_ap = [0.05,0.08,0.11,0.14,0.17,0.2,0.3,0.6499,1]
+    maps_doc_ap = [0.04947362667913055,0.027759799775628247,0.049305652834830564,0.04356490662873979,0.051522978805009195,0.0548515885052343,0.0643991042343194,0.05374360517303016,0.05374360517303016]
+    clusters_doc_ap = [60,93,141,204,267,283,96,1,1]
+
+    e_doc_zf = [0.05,0.08,0.11,0.14,0.17,0.2,0.3,0.6499,1]
+    maps_doc_zf = [0.03555295868881719,0.03555295868881719,0.03555295868881719,0.03555295868881719,0.03555295868881719,0.03555295868881719,0.03555295868881719,0.03555295868881719,0.04052737723335231]
+    clusters_doc_zf = [1,1,1,1,1,1,1,1,1]
+
+
+    plt.plot(clusters_bert_ap,maps_bert_ap, marker='x',color='red',label='BERT Embedding')
+    
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("mAP Score")
+    plt.title("Number of clusters v/s mAP for AP Dataset - BERT Embedding")
+    plt.legend()
+    plt.show()
+
+    plt.plot(clusters_bert_ziff,maps_bert_ziff, marker='x',color='green',label='BERT Embedding')
+    
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("mAP Score")
+    plt.title("Number of clusters v/s mAP for ZF Dataset - BERT Embedding")
+    plt.legend()
+    plt.show()
+
+    plt.plot(clusters_doc_ap,maps_doc_ap, marker='x',color='blue',label='Doc2Vec Embedding')
+    
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("mAP Score")
+    plt.title("Number of clusters v/s mAP for AP Dataset - Doc2Vec Embedding")
+    plt.legend()
+    plt.show()
+
+    plt.plot(clusters_doc_zf,maps_doc_zf, marker='x',color='green',label='Doc2Vec Embedding')
+    
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("mAP Score")
+    plt.title("Number of clusters v/s mAP for ZF Dataset - Doc2Vec Embedding")
+    plt.legend()
+    plt.show()
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
 
-    doc2vec_zf = [0.033491359,0.046170034,0.0405,0.242088356]
-    title = "Clustering with Doc2Vec embedding v/s BM25 - ZF Dataset"
-    plot_MAP_AP(doc2vec_zf,title)
+    # doc2vec_zf = [0.033491359,0.046170034,0.0405,0.242088356]
+    # title = "Clustering with Doc2Vec embedding v/s BM25 - ZF Dataset"
+    # plot_MAP_AP(doc2vec_zf,title)
 
-    doc2vec_ap = [0.033330762,0.041076875 ,0.064399,0.091872847]
-    title = "Clustering with Doc2Vec embedding v/s BM25 - AP Dataset"
-    plot_MAP_AP(doc2vec_ap,title)
+    # doc2vec_ap = [0.033330762,0.041076875 ,0.064399,0.469134]
+    # title = "Clustering with Doc2Vec embedding v/s BM25 - AP Dataset"
+    # plot_MAP_AP(doc2vec_ap,title)
 
-    bert_ap = [0.119876425,0.191080783,0.352482576,0.091872847]
-    title = "Clustering with BERT embedding v/s BM25 - AP Dataset"
-    plot_MAP_AP(bert_ap,title)
+    # bert_ap = [0.119876425,0.191080783,0.352482576,0.469134]
+    # title = "Clustering with BERT embedding v/s BM25 - AP Dataset"
+    # plot_MAP_AP(bert_ap,title)
 
-    bert_zf = [0.078175149,0.047689964,0.1184,0.242088356]
-    title = "Clustering with BERT embedding v/s BM25 - ZF Dataset"
-    plot_MAP_AP(bert_zf,title)
+    # bert_zf = [0.078175149,0.047689964,0.1184,0.242088356]
+    # title = "Clustering with BERT embedding v/s BM25 - ZF Dataset"
+    # plot_MAP_AP(bert_zf,title)
 
-    mat = GetMatrixFromDisk("centers.txt")
-    ConvTSV(mat)
-
-    plot()
+    # mat = GetMatrixFromDisk("centers.txt")
+    # ConvTSV(mat)
+    
+    plot_dbscan()
 
 

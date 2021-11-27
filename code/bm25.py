@@ -36,7 +36,6 @@ def GetDocumentList(CollectionName):
     all_dir = tqdm(os.listdir(os.path.join(
         "tipster_comp", CollectionName)), position=0, leave=True)
     for num in all_dir:
-        count += 1
         filepath = os.path.join(os.path.join(
             "tipster_comp", CollectionName), num)
         with open(filepath, "r", errors="ignore") as f:
@@ -52,8 +51,9 @@ def GetDocumentList(CollectionName):
                         doc_content = text.get_text()
                         tokentext += doc_content
                     docContent[docno] = tokentext
-        # if count > 15:  # WARNING: REMOVE!
+        # if count == 10:  # WARNING: REMOVE!
         #     break
+        # count += 1
 
     return docContent
 
@@ -128,12 +128,14 @@ if __name__ == "__main__":
         scores = bm25.get_scores(tokenized_query)
         sorted_scores = [(scores[i], doc_ids[i]) for i in range(len(scores))]
         sorted_scores.sort(reverse=True)
-        # print(sorted_scores[:10])
-        # for i in range(15):
-        #     print(sorted_scores[i][0])
-        # with open(f"rankings/bm25-ranking-{CollectionName}", "a") as f:
-        #     for i in range(100):
-        #         f.write(f"{query_id} 0 {sorted_scores[i][1]} {sorted_scores[i][0]}\n")
+        print(query_id)
+        print(query_text)
+        print(sorted_scores[:10])
+        for i in range(15):
+            print(sorted_scores[i][0])
+        with open(f"rankings/bm25-ranking-{CollectionName}-double-check", "a") as f:
+            for i in range(100):
+                f.write(f"{query_id} 0 {sorted_scores[i][1]} {sorted_scores[i][0]}\n")
 
 
 

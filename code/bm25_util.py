@@ -86,6 +86,7 @@ if __name__ == "__main__":
         result_file, qrels_file
     )
 
+    print(MAP)
     # with open(f"results/bm25_{CollectionName}", "a") as f:
     #     f.write(f"MAP = {MAP}")
 

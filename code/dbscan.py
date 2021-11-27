@@ -93,7 +93,7 @@ def runDBSCAN(
         }
     )
 
-    df.to_csv(f"results/dbscan_{embedding}_{dname}_{metric}", index=False)
+    df.to_csv(f"results/dbscan_{embedding}_{dname}_{metric})_double_check", index=False)
     
 
 if __name__ == "__main__":

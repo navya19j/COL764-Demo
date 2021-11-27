@@ -59,9 +59,9 @@ def GetDocumentList(CollectionName):
                         doc_content = text.get_text()
                         tokentext+=doc_content
                     docContent[docno] = tokentext
-        # if count > 5:  # WARNING: REMOVE!
+        # if count > 1:  # WARNING: REMOVE!
         #     break  
-
+        # count += 1
     return docContent
 
 
@@ -169,22 +169,22 @@ if __name__ == "__main__":
     data = GetDocumentList(CollectionName)  
     logger.info(f"NUMBER OF DOCUMENTS = {len(data)}")
 
-    # logger.info(f"EXTRACTING QRELS...")
-    # qrels = ExtractQrels("qrels.rtf")
+    logger.info(f"EXTRACTING QRELS...")
+    qrels = ExtractQrels("qrels.rtf")
 
-    # logger.info(f"SAMPLING SUBSET OF DOCUMENTS...")
-    # data_subset = RandomSampleTest(qrels,data)
-    # logger.info(f"NUMBER OF SAMPLED DOCUMENTS = {len(data_subset)}")
+    logger.info(f"SAMPLING SUBSET OF DOCUMENTS...")
+    data_subset = RandomSampleTest(qrels,data)
+    logger.info(f"NUMBER OF SAMPLED DOCUMENTS = {len(data_subset)}")
 
-    # logger.info(f"FINDING THE BERT DOCUMENT REPRESENTATION OF SAMPLED DOCUMENTS, MODEL = {modelname}")
-    # DocMatrix, DocMap = getDocMatrix(data_subset, modelname)
+    logger.info(f"FINDING THE BERT DOCUMENT REPRESENTATION OF SAMPLED DOCUMENTS, MODEL = {modelname}")
+    DocMatrix, DocMap = getDocMatrix(data_subset, modelname)
 
-    # logger.info(f"SAVING DOC MATRIX...")
-    # np.savetxt(f"embeddings/bert-embedding-{CollectionName}", DocMatrix)
+    logger.info(f"SAVING DOC MATRIX...")
+    np.savetxt(f"embeddings/bert-embedding-{CollectionName}", DocMatrix)
 
-    # logger.info(f"SAVING DOCUMENT NUMBER ---> DOCUMENT NAME MAPPING...")
-    # with open(f"embeddings/bert-docmap-{CollectionName}","w") as o:
-    #     o.write(json.dumps(DocMap))
+    logger.info(f"SAVING DOCUMENT NUMBER ---> DOCUMENT NAME MAPPING...")
+    with open(f"embeddings/bert-docmap-{CollectionName}","w") as o:
+        o.write(json.dumps(DocMap))
 
 
 

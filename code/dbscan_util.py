@@ -84,7 +84,7 @@ def computeMAP(
 
         a = computed_scores[query_id]
         b = qrel_scores[str(int(query_id))]
-        print(len(set(a) & set(b)))
+        # print(len(set(a) & set(b)))
 
         relevant = 0
         total = 0
@@ -102,26 +102,9 @@ def computeMAP(
     
     if len(APs) == 0:
         return 0
-    # APs = sorted(APs, reverse=True)[0:10]
+    APs = sorted(APs, reverse=True)
+    print(APs[:15])
     return np.mean(APs)
-            
-
-
-    with open(result_file, "r") as f:
-        lines = f.read().splitlines()
-        for line in lines:
-            words = re.split(" ", line)
-            query_id = int(words[0])
-            doc_id = int(words[2])
-            if doc_id in scores[query_id]:
-                good += 1
-                print("SOMETHING IS GOOD!")
-
-                APs.append(good / count)
-    if good == 0:
-        print("NOTHING IS GOOD")
-    return np.mean(APs)
-
 
 def computeMetrics(
     query_vectors, doc_vectors, clustering, doc_map, query_map, metric, dname, embedding
@@ -132,7 +115,7 @@ def computeMetrics(
 
     logger.info(f"COMPUTING SIMILARITIES...")
 
-    result_file = f"{embedding}-ranking-{dname}"
+    result_file = f"{embedding}-ranking-{dname}-double-check"
     open(f"rankings/{result_file}", "w").close()
 
     for i in range(len(query_vectors)):

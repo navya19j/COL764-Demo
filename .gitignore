@@ -1,0 +1,12 @@
+*.sh
+*.ipynb
+*.pyc
+*.pyo
+
+embeddings/
+logs/
+tipster_comp/
+__pycache__/
+
+.ipynb_checkpoints
+.vscode

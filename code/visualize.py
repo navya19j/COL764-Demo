@@ -53,10 +53,8 @@ def add_value_labels(ax, spacing=5):
             ha='center',                # Horizontally center label
             va=va)  
 
-def plot_MAP_AP(yvals,titlee):
+def plot_MAP_AP(yvals,titlee, plot_name=None):
 
-
-    
     xvals = ["K-Means","CLARANS","DB-SCAN","BM25"]
     
 
@@ -81,12 +79,12 @@ def plot_MAP_AP(yvals,titlee):
     plt.rc('legend', fontsize=8)    # legend fontsize
     plt.rc('figure', titlesize=9)  # fontsize of the figure title
 
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(10, 8))
     ax = freq_series.plot(kind="bar",color =my_colors)
-    ax.set_title(titlee)
-    ax.set_xlabel("Retrieval Method")
-    ax.set_ylabel("mAP Score")
-    ax.set_xticklabels(xvals,rotation=45, ha='left')
+    ax.set_title(titlee, fontsize=14)
+    ax.set_xlabel("Retrieval Method", fontsize=14)
+    ax.set_ylabel("mAP Score", fontsize=14)
+    ax.set_xticklabels(xvals,rotation=45, ha='left', fontsize=14)
 
     rects = ax.patches
     
@@ -95,7 +93,9 @@ def plot_MAP_AP(yvals,titlee):
     # labels = [f"label{i}" for i in range(len(rects))]
 
     add_value_labels(ax, spacing=5)
-
+    plt.tight_layout()
+    if plot_name:
+        plt.savefig(f"./{plot_name}")
     plt.show()
 
     # fig = plt.figure(figsize = (10, 5))

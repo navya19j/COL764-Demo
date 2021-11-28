@@ -1,5 +1,4 @@
 *.sh
-*.ipynb
 *.pyc
 *.pyo
 
@@ -7,6 +6,14 @@ embeddings/
 logs/
 tipster_comp/
 __pycache__/
+images/
+trec_eval/
 
 .ipynb_checkpoints
 .vscode
+.DS_Store
+
+convert_to_trec.py
+split_qrels.py
+
+play.ipynb

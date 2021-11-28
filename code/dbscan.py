@@ -115,7 +115,8 @@ if __name__ == "__main__":
     metric = "cosine"
     min_samples = 2
     epsilons = np.concatenate((np.linspace(0.05, 0.2, num=6), np.linspace(0.3, 1, num=3)))
-
+    epsilons = [0.08]
+    
     runDBSCAN(
         epsilons=epsilons,
         metric=metric,

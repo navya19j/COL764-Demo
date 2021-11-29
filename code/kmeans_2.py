@@ -100,6 +100,7 @@ def runKMEANS(
     if len(deltas) > 1:
         cluster_count = cluster_counts[0]
         for delta in deltas:
+            logger.info(f"DELTA = {delta}")
             logger.info(
                 f"COMPUTING CLUSTERING FOR CLUSTER COUNT = {cluster_count}, delta = {delta}")
 
@@ -147,8 +148,8 @@ def runKMEANS(
             }
         )
 
-        # df.to_csv(
-        #     f"results/kmeans_{embedding}_{dname}_cosine_deltas_extra", index=False)
+        df.to_csv(
+            f"results/kmeans_{embedding}_{dname}_cosine_deltas_extra", index=False)
 
 if __name__ == "__main__":
     embedding = sys.argv[1]
@@ -168,7 +169,7 @@ if __name__ == "__main__":
 
     # cluster_counts = np.linspace(50, 250, num=5)
     cluster_counts = [50]
-    deltas = [0, 0]
+    deltas = [0.07, 0.07]
     # deltas = [0.07]
     # deltas = np.linspace(0, 0.2, num=10)
 

@@ -1,13 +1,3 @@
-"""BERT For Document Similarity Computation
-
-Running this script comptues the BERT embeddings
-of a set of documents and stores it in some file for later use.
-
-To generate and store the embeddings for the AP dataset, run the following line on the terminal
-
-$ python3 bert.py 2 embeddings/bert-embedding embeddings/bert-docmap
-"""
-
 from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
@@ -26,13 +16,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 fh = logging.FileHandler("logs/agreement_all.log")
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
+
 
 def GetDocumentList(CollectionName):
     """ Returns a dictionary of {doc_name ---> doc_text}
@@ -42,13 +34,15 @@ def GetDocumentList(CollectionName):
 
     docContent = {}
     required_tags = ["text"]
-    all_dir = tqdm(os.listdir(os.path.join("tipster_comp",CollectionName)),position=0, leave=True)
+    all_dir = tqdm(os.listdir(os.path.join(
+        "tipster_comp", CollectionName)), position=0, leave=True)
     for num in all_dir:
         count += 1
-        filepath = os.path.join(os.path.join("tipster_comp",CollectionName),num)
-        with open(filepath,"r",errors="ignore") as f:
-            content = f.read()   
-            bs_content = bs(content,'html.parser')
+        filepath = os.path.join(os.path.join(
+            "tipster_comp", CollectionName), num)
+        with open(filepath, "r", errors="ignore") as f:
+            content = f.read()
+            bs_content = bs(content, 'html.parser')
             all_doc = bs_content.find_all('doc')
             for doc in all_doc:
                 docno = doc.find("docno").get_text().strip()
@@ -57,11 +51,11 @@ def GetDocumentList(CollectionName):
                     tokentext = ""
                     for text in text_content:
                         doc_content = text.get_text()
-                        tokentext+=doc_content
+                        tokentext += doc_content
                     docContent[docno] = tokentext
-        if count == 1:  # WARNING: REMOVE!
-            break  
-        count += 1
+        # if count == 1:  # WARNING: REMOVE!
+        #     break
+        # count += 1
     return docContent
 
 
@@ -74,10 +68,12 @@ def GetQueryNumber(text):
             # print(word)
             return word
 
+
 def GetQueryList():
 
     queries = {}
-    query_file = os.path.join("queries", "topics", "trec12", "topics.51-100.doc")
+    query_file = os.path.join(
+        "queries", "topics", "trec12", "topics.51-100.doc")
 
     with open(query_file, "r", errors="ignore") as f:
         content = f.read()
@@ -102,16 +98,17 @@ def getModel(modelname):
     model = SentenceTransformer(modelname)
     return model
 
+
 def ExtractQrels(filename):
     """ Extracts qrels from the given file
     """
     qrels = []
-    with open(filename,"r") as o:
+    with open(filename, "r") as o:
         lines = o.readlines()
         text = " ".join(lines)
-        text = text.replace("\n"," ")
-        text = text.replace("\\"," ")
-        text = re.split(" ",text)
+        text = text.replace("\n", " ")
+        text = text.replace("\\", " ")
+        text = re.split(" ", text)
 
     for word in text:
         if "AP" in word:
@@ -120,27 +117,15 @@ def ExtractQrels(filename):
 
     return qrels
 
+
 def getDocMatrix(data, modelname):
-    """ Returns BERT embeddings of the given documents using the given model
+    count = 0
+    dictionary = {}
     
-    Also returns a mapping from index # in the embeddings matrix to doc_name 
-    """
-    model = getModel(modelname)
-    DocMatrix = []
-    i = 0
-    DocMap = {}
+    return DocMatrix, DocMap
 
-    for doc in tqdm(data):
-        text = data[doc]
-        vec = model.encode([text])[0] 
-        DocMatrix.append(vec)
-        DocMap[i] = doc 
-        i += 1
-    
-    DocMatrix = np.array(DocMatrix)
-    return DocMatrix,DocMap
 
-def RandomSampleTest(qrels,data):
+def RandomSampleTest(qrels, data):
     """ Randomly sample a subset of documents from data.
 
     Number of sampled documents is given by the parameter thresh.
@@ -148,12 +133,13 @@ def RandomSampleTest(qrels,data):
     the given threshold
     """
     # thresh = 500  # WARNING: CHANGE BACK TO 8000!
-    thresh = 10
+    thresh = 0
     test_data = dict(random.sample(data.items(), thresh))
     for doc in qrels:
         if doc not in test_data and doc in data:
             test_data[doc] = data[doc]
     return test_data
+
 
 if __name__ == "__main__":
 
@@ -165,34 +151,33 @@ if __name__ == "__main__":
         CollectionName = "ziff"
 
     short_forms = {
-        "ap" : "AP",
-        "ziff" : "ZF"
+        "ap": "AP",
+        "ziff": "ZF"
     }
 
     modelname = "bert-base-nli-mean-tokens"
-    
+
     logger.info(f"STARTED READING DOCUMENTS...")
-    data = GetDocumentList(CollectionName)  
+    data = GetDocumentList(CollectionName)
     logger.info(f"NUMBER OF DOCUMENTS = {len(data)}")
 
     logger.info(f"EXTRACTING QRELS...")
     qrels = ExtractQrels(f"qrels_{short_forms[CollectionName]}.rtf")
 
     logger.info(f"SAMPLING SUBSET OF DOCUMENTS...")
-    data_subset = RandomSampleTest(qrels,data)
+    data_subset = RandomSampleTest(qrels, data)
     logger.info(f"NUMBER OF SAMPLED DOCUMENTS = {len(data_subset)}")
 
-    logger.info(f"FINDING THE BERT DOCUMENT REPRESENTATION OF SAMPLED DOCUMENTS, MODEL = {modelname}")
+    logger.info(
+        f"FINDING THE BERT DOCUMENT REPRESENTATION OF SAMPLED DOCUMENTS, MODEL = {modelname}")
     DocMatrix, DocMap = getDocMatrix(data_subset, modelname)
 
     logger.info(f"SAVING DOC MATRIX...")
-    np.savetxt(f"embeddings/demo-bert-embedding-{CollectionName}", DocMatrix)
+    np.savetxt(f"embeddings/tfidf-embedding-{CollectionName}", DocMatrix)
 
     logger.info(f"SAVING DOCUMENT NUMBER ---> DOCUMENT NAME MAPPING...")
-    with open(f"embeddings/bert-docmap-{CollectionName}","w") as o:
+    with open(f"embeddings/tfidf-docmap-{CollectionName}", "w") as o:
         o.write(json.dumps(DocMap))
-
-
 
     logger.info(f"STARTED READING QUERIES...")
     data = GetQueryList()
@@ -200,10 +185,9 @@ if __name__ == "__main__":
 
     QueryMatrix, QueryMap = getDocMatrix(data, modelname)
     logger.info(f"SAVING QUERY MATRIX...")
-    np.savetxt(f"embeddings/demo-bert-query-embedding-{CollectionName}-demo", QueryMatrix)
+    np.savetxt(
+        f"embeddings/tfidf-query-embedding-{CollectionName}-demo", QueryMatrix)
 
     logger.info(f"SAVING QUERY NUMBER ---> QUERY NAME MAPPING...")
-    with open(f"embeddings/demo-bert-querymap-{CollectionName}", "w") as o:
+    with open(f"embeddings/tfidf-querymap-{CollectionName}", "w") as o:
         o.write(json.dumps(QueryMap))
-
-    

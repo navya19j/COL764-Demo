@@ -12,8 +12,11 @@ trec_eval/
 .ipynb_checkpoints
 .vscode
 .DS_Store
+.npy
 
 convert_to_trec.py
 split_qrels.py
 
-play.ipynb
+tmp.ipynb
+
+d2v.*

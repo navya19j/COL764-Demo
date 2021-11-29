@@ -3,6 +3,8 @@ import numpy as np
 from sklearn import cluster
 from scipy.spatial.distance import cosine
 from sklearn.metrics.pairwise import pairwise_distances
+import pytrec_eval
+import json
 
 import logging
 logger = logging.getLogger(__name__)
@@ -32,38 +34,41 @@ def getLabelVectors(
         label_vectors[label] = label_vector
     return label_vectors
 
-def findBestCluster(
-    query_vector, label_vectors, metric
-):
-    best_cluster = -1
-    smallest_distance = 1
+def findGoodClusters(
+    query_vector, label_vectors, delta
+):  
     query_vector = np.array(query_vector)
+    similarities = []
     for cluster_id, label_vector in label_vectors.items():
-        distance = pairwise_distances(
-            query_vector.reshape(1, -1), label_vector.reshape(1, -1), metric=metric
-            )[0][0]
-        if distance < smallest_distance:
-            smallest_distance = distance 
-            best_cluster = cluster_id 
-    
-    return best_cluster
+        similarity = abs(1 - cosine(
+            query_vector.reshape(1, -1), label_vector.reshape(1, -1)
+        ))
+        similarities.append((similarity, cluster_id))
+    similarities.sort(reverse=True)
+    good_clusters = [similarities[0][1]]
+    for i in range(1, len(similarities)):
+        if similarities[0][0] - similarities[i][0] > delta:
+            break
+        good_clusters.append(similarities[i][1])
+    return good_clusters
 
 
 def loadScores(
     result_file
 ):  
     scores = {}
-    with open(f"rankings/{result_file}") as f:
+    with open(f"rankings/trec-format/{result_file}") as f:
         lines = f.read().splitlines()
         for line in lines:
             words = re.split(" |\t", line)
-            # print(words)
-            # print(line, result_file)
-            query_id = words[0]
+            query_id = str(int(words[0]))
             doc_id = words[2]
             if not query_id in scores:
-                scores[query_id] = []
-            scores[query_id].append(doc_id)
+                scores[query_id] = {}
+            if len(words) > 4:
+                scores[query_id][doc_id] = float(words[4])
+            else:
+                scores[query_id][doc_id] = 1
     return scores
 
 
@@ -73,41 +78,33 @@ def computeMAP(
     qrel_scores = loadScores(qrels_file)
     computed_scores = loadScores(result_file)
 
-    # print(qrel_scores)
-    # print(computed_scores['51'])
-    
-    APs = []
-    
-    for query_id, doc_ids in computed_scores.items():
-        # print(computed_scores[query_id])
-        # print(qrel_scores[str(int(query_id))])
+    results = pytrec_eval.RelevanceEvaluator(
+        qrel_scores, {'map'}).evaluate(computed_scores)
 
-        a = computed_scores[query_id]
-        b = qrel_scores[str(int(query_id))]
-        # print(len(set(a) & set(b)))
-
-        relevant = 0
-        total = 0
-        precisions = []
-        for doc_id in doc_ids:
-            total += 1
-            if doc_id in qrel_scores[str(int(query_id))]:
-                relevant += 1
-                precisions.append(relevant/total)
-        if len(precisions) > 0:
-            AP = np.mean(precisions)
-        else:
-            AP = 0
-        APs.append(AP)
+    MAPs = []
+    for query_id, metrics in results.items():
+        MAPs.append(metrics["map"])
     
-    if len(APs) == 0:
-        return 0
-    APs = sorted(APs, reverse=True)
-    print(APs[:15])
-    return np.mean(APs)
+    return np.mean(MAPs)
+
+
+def computeRecall(
+    result_file, qrels_file
+):
+    qrel_scores = loadScores(qrels_file)
+    computed_scores = loadScores(result_file)
+
+    results = pytrec_eval.RelevanceEvaluator(
+        qrel_scores, {'recall.100'}).evaluate(computed_scores)
+
+    recalls = []
+    for query_id, metrics in results.items():
+        recalls.append(metrics["recall_100"])
+
+    return np.mean(recalls)
 
 def computeMetrics(
-    query_vectors, doc_vectors, clustering, doc_map, query_map, metric, dname, embedding
+    query_vectors, doc_vectors, clustering, doc_map, query_map, dname, embedding, delta
 ):  
     label_vectors = getLabelVectors(
         doc_vectors, clustering
@@ -115,44 +112,69 @@ def computeMetrics(
 
     logger.info(f"COMPUTING SIMILARITIES...")
 
-    result_file = f"{embedding}-ranking-{dname}-double-check"
-    open(f"rankings/{result_file}", "w").close()
+    result_file = f"{embedding}-ranking-{dname}-extra"
+    open(f"rankings/trec-format/{result_file}", "w").close()
+
+    size = {}
+    for label in clustering.labels_:
+        if not label in size:
+            size[label] = 0
+        size[label] += 1
+
+    total_sizes = []
+    clusters_retrieveds = []
 
     for i in range(len(query_vectors)):
-        best_cluster = findBestCluster(
-            query_vectors[i], label_vectors, metric=metric
+        good_clusters = findGoodClusters(
+            query_vectors[i], label_vectors, delta
         )
+
+        clusters_retrieveds.append(len(good_clusters))
+
+        total_size = 0
+        # tmp = []
+        for cluster_id in good_clusters:
+            total_size += size[cluster_id]
+        #     tmp.append(size[cluster_id])
+        # tmp.sort(reverse=True)
+        # print(tmp[:10])
+        total_sizes.append(total_size)
+
+        logger.info(f"NUMBER OF CLUSTERS RETRIEVED = {len(good_clusters)}, TOTAL SIZE = {total_size}")
         scores = []
         for j in range(len(doc_vectors)):
             score = 0.0
-            if clustering.labels_[j] != best_cluster:
+            if clustering.labels_[j] not in good_clusters:
                 score = 0.0
             else:
-                score = pairwise_distances(
-                    query_vectors[i].reshape(1, -1), doc_vectors[j].reshape(1, -1), metric=metric
-                )[0][0]
+                score = abs(1 - cosine(
+                    query_vectors[i].reshape(1, -1), doc_vectors[j].reshape(1, -1)
+                ))
             scores.append((score, j))
+
 
         scores.sort(reverse=True)
         scores = scores[:min(len(scores), 100)]
-        with open(f"rankings/{result_file}", "a") as f:
+        with open(f"rankings/trec-format/{result_file}", "a") as f:
             for score, doc_id in scores:
-                # print(i, doc_id)
-                f.write(f"{query_map[str(i)]} 0 {doc_map[str(doc_id)]} {score}\n") 
+                f.write(f"{query_map[str(i)]} Q0 {doc_map[str(doc_id)]} 1 {score} runidl\n") 
+                pass
     
-    qrels_file = "trec12-news.tsv"
+    qrels_file = "qrels-ap"
+
     MAP = computeMAP(
         qrels_file=qrels_file,
         result_file=result_file
     )
 
-    return MAP, 0, 0, 0
-    
-    # logger.info(f"MAP = {MAP}")
-    # nDCG_5, nDCG_10, nDCG_50 = computeNDCG(
-    #     dname=dname,
-    #     result_file=f"results/{dname}_DBSCAN"
-    # )
+    recall = computeRecall(
+        qrels_file=qrels_file,
+        result_file=result_file
+    )
 
-    # return MAP, nDCG_5, nDCG_10, nDCG_50
+    total_clusters = len(set(clustering.labels_))
+    clusters_retrieved = np.mean(clusters_retrieveds)
+    num_docs_retrieved = np.mean(total_sizes)
+
+    return MAP, recall, total_clusters, clusters_retrieved, num_docs_retrieved
 

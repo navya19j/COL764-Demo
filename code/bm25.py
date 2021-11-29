@@ -51,9 +51,9 @@ def GetDocumentList(CollectionName):
                         doc_content = text.get_text()
                         tokentext += doc_content
                     docContent[docno] = tokentext
-        # if count == 10:  # WARNING: REMOVE!
-        #     break
-        # count += 1
+        if count == 1:  # WARNING: REMOVE!
+            break
+        count += 1
 
     return docContent
 
@@ -128,13 +128,13 @@ if __name__ == "__main__":
         scores = bm25.get_scores(tokenized_query)
         sorted_scores = [(scores[i], doc_ids[i]) for i in range(len(scores))]
         sorted_scores.sort(reverse=True)
-        print(query_id)
-        print(query_text)
-        print(sorted_scores[:10])
-        for i in range(15):
-            print(sorted_scores[i][0])
-        with open(f"rankings/bm25-ranking-{CollectionName}-double-check", "a") as f:
-            for i in range(100):
+        # print(query_id)
+        # print(query_text)
+        # print(sorted_scores[:10])
+        # for i in range(15):
+        #     print(sorted_scores[i][0])
+        with open(f"rankings/demo-bm25-ranking-{CollectionName}-double-check", "a") as f:
+            for i in range(min(len(sorted_scores), 100)):
                 f.write(f"{query_id} 0 {sorted_scores[i][1]} {sorted_scores[i][0]}\n")
 
 

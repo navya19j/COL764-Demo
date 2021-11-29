@@ -28,11 +28,12 @@ def GetTokens(text_content):
 
 # Get Mapping of Doc Name to Text in the doc"
 def GetDocumentList(CollectionName):
-
+    count = 0
     docContent = {}
     required_tags = ["text"]
     all_dir = tqdm(os.listdir(os.path.join("tipster_comp",CollectionName)),position=0, leave=True)
     for num in all_dir:
+        count += 1
         filepath = os.path.join(os.path.join("tipster_comp",CollectionName),num)
         with open(filepath,"r",errors="ignore") as f:
             content = f.read()   
@@ -47,6 +48,9 @@ def GetDocumentList(CollectionName):
                         doc_content = text.get_text()
                         tokentext+=doc_content
                     docContent[docno] = tokentext
+        if count == 1:  # WARNING: REMOVE!
+            break  
+        count += 1
 
     return docContent
 
@@ -83,7 +87,7 @@ def TrainDocVec(tagset,filename):
 
     model.build_vocab(tagset)
 
-    for epoch in range(epoch):
+    for epoch in range(1):
         model.train(tagset,
                     total_examples=model.corpus_count,
                     epochs=model.epochs)
@@ -91,9 +95,9 @@ def TrainDocVec(tagset,filename):
         model.min_alpha = model.alpha
         max_epochs.update(1)
 
-    print(model.most_similar("book"))
+    # print(model.most_similar("book"))
     model.save(filename)
-    print("Model Saved")
+    # print("Model Saved")
 
 # Load Trained Model from Disk
 def getModel(model):
@@ -130,7 +134,7 @@ def PartitionDocs(data):
 
 def TestModel(model,testdata):
 
-    print(model.epochs)
+    # print(model.epochs)
 
     for doc in testdata:
         text = testdata[doc]
@@ -153,7 +157,7 @@ def ExtractQrels(filename):
         if "ZF" in word:
             qrels.append(word)
             # print(word)
-    print(qrels)
+    # print(qrels)
     return qrels
 
 def getDocMatrix(data,modelname):
@@ -165,6 +169,7 @@ def getDocMatrix(data,modelname):
     avglen = 0
     for doc in tqdm(data):
         text = data[doc]
+        # print(text)
         tokens = GetTokens(text)
         avglen+=len(tokens)
         vec = model.dv[doc]
@@ -172,15 +177,17 @@ def getDocMatrix(data,modelname):
         DocMap[doc] = i
         i+=1
 
-    print("Average Length")
-    print(avglen/len(data))
+    # print("Average Length")
+    # print(avglen/len(data))
+
+    print(DocMatrix.shape)
 
     return DocMatrix,DocMap
 
 def computeSimilarities(data,modelname):
 
     model = getModel(modelname)
-    print(model.wv.index_to_key)
+    # print(model.wv.index_to_key)
 
     docmatrix = np.zeros((len(data),len(data)))
     i=0
@@ -189,7 +196,7 @@ def computeSimilarities(data,modelname):
     for doc1 in data:
         for doc2 in data:
             docmatrix[i][j] = model.dv.n_similarity(data[doc1],data[doc2])
-            print(docmatrix[i][j])
+            # print(docmatrix[i][j])
             loop.update(1)
             j+=1
         i+=1
@@ -198,14 +205,14 @@ def computeSimilarities(data,modelname):
 
 
 def RandomSampleTest(qrels,data,thresh):
-
+    thresh = 3
     test_data = dict(random.sample(data.items(), thresh))
     # print(test_data)
     for doc in qrels:
-        if doc not in test_data:
+        if doc not in test_data and doc in data:
             test_data[doc] = data[doc]
-            print(doc)
-    print("done")
+    #         print(doc)
+    # print("done")
     return test_data
 
 if __name__ == "__main__":
@@ -223,7 +230,7 @@ if __name__ == "__main__":
     
     vector_length = 1000
     data = GetDocumentList(CollectionName)
-    print(len(data))
+    # print(len(data))
 
     stop_words = GetStopwords("stopwords.txt")
 
@@ -238,8 +245,8 @@ if __name__ == "__main__":
 
     DocMatrix,DocMap = getDocMatrix(RandomSampleTest(qrels,data,0),modelname)
 
-    np.savetxt(sys.argv[2],DocMatrix)
+    np.savetxt(f"embeddings/demo-doc2vec-embedding-{CollectionName}", DocMatrix)
 
-    with open(sys.argv[3],"w") as o:
+    with open(f"embeddings/demo-doc2vec-querymap-{CollectionName}", "w") as o:
         o.write(json.dumps(DocMap))
-    print(DocMatrix.shape)
+    # print(DocMatrix.shape)

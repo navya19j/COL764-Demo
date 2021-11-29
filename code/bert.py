@@ -59,9 +59,9 @@ def GetDocumentList(CollectionName):
                         doc_content = text.get_text()
                         tokentext+=doc_content
                     docContent[docno] = tokentext
-        # if count > 1:  # WARNING: REMOVE!
-        #     break  
-        # count += 1
+        if count == 1:  # WARNING: REMOVE!
+            break  
+        count += 1
     return docContent
 
 
@@ -71,7 +71,7 @@ def GetQueryNumber(text):
     for word in tokens:
         word = word.strip()
         if (len(word) > 0):
-            print(word)
+            # print(word)
             return word
 
 def GetQueryList():
@@ -148,6 +148,7 @@ def RandomSampleTest(qrels,data):
     the given threshold
     """
     # thresh = 500  # WARNING: CHANGE BACK TO 8000!
+    thresh = 10
     test_data = dict(random.sample(data.items(), thresh))
     for doc in qrels:
         if doc not in test_data and doc in data:
@@ -163,6 +164,11 @@ if __name__ == "__main__":
     else:
         CollectionName = "ziff"
 
+    short_forms = {
+        "ap" : "AP",
+        "ziff" : "ZF"
+    }
+
     modelname = "bert-base-nli-mean-tokens"
     
     logger.info(f"STARTED READING DOCUMENTS...")
@@ -170,7 +176,7 @@ if __name__ == "__main__":
     logger.info(f"NUMBER OF DOCUMENTS = {len(data)}")
 
     logger.info(f"EXTRACTING QRELS...")
-    qrels = ExtractQrels("qrels.rtf")
+    qrels = ExtractQrels(f"qrels_{short_forms[CollectionName]}.rtf")
 
     logger.info(f"SAMPLING SUBSET OF DOCUMENTS...")
     data_subset = RandomSampleTest(qrels,data)
@@ -180,10 +186,10 @@ if __name__ == "__main__":
     DocMatrix, DocMap = getDocMatrix(data_subset, modelname)
 
     logger.info(f"SAVING DOC MATRIX...")
-    np.savetxt(f"embeddings/bert-embedding-{CollectionName}", DocMatrix)
+    np.savetxt(f"embeddings/demo-bert-embedding-{CollectionName}", DocMatrix)
 
     logger.info(f"SAVING DOCUMENT NUMBER ---> DOCUMENT NAME MAPPING...")
-    with open(f"embeddings/bert-docmap-{CollectionName}","w") as o:
+    with open(f"embeddings/demo-bert-docmap-{CollectionName}","w") as o:
         o.write(json.dumps(DocMap))
 
 
@@ -194,10 +200,10 @@ if __name__ == "__main__":
 
     QueryMatrix, QueryMap = getDocMatrix(data, modelname)
     logger.info(f"SAVING QUERY MATRIX...")
-    np.savetxt(f"embeddings/bert-query-embedding-{CollectionName}", QueryMatrix)
+    np.savetxt(f"embeddings/demo-bert-query-embedding-{CollectionName}-demo", QueryMatrix)
 
     logger.info(f"SAVING QUERY NUMBER ---> QUERY NAME MAPPING...")
-    with open(f"embeddings/bert-querymap-{CollectionName}", "w") as o:
+    with open(f"embeddings/demo-bert-querymap-{CollectionName}", "w") as o:
         o.write(json.dumps(QueryMap))
 
     
